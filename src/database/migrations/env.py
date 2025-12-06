@@ -1,3 +1,4 @@
+from src.database.models.task import Task
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -5,8 +6,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from database.models.base import Base
-from config import config as app_config
+from src.database.models.base import Base
+from src.config import config as app_config
 
 config = context.config
 

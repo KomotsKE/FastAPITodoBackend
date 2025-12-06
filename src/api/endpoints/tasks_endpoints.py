@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from database.session import get_async_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+from sqlalchemy import select
 from database.models.task import Task
 from schemas.task import TaskCreate, TaskOut, TaskUpdate
 
@@ -19,8 +19,7 @@ async def get_tasks(session: AsyncSession =Depends(get_async_session)):
 @router.get("/tasks/{task_id}", response_model=TaskOut)
 async def get_task(task_id: UUID, session: AsyncSession =Depends(get_async_session)):
     """получить задачу"""
-    query = await session.execute(select(Task).where(Task.id == task_id))
-    task = query.scalars().first()
+    task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(404, "task not found")
     return task
@@ -43,8 +42,7 @@ async def create_task(task_payload: TaskCreate, session: AsyncSession =Depends(g
 @router.patch("/tasks/{task_id}", response_model=TaskOut)
 async def update_task(task_id: UUID, task_payload: TaskUpdate, session: AsyncSession =Depends(get_async_session)):
     """обновление задачи"""
-    query = await session.execute(select(Task).where(Task.id == task_id))
-    task = query.scalars().first()
+    task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(404, "task not found")
     
@@ -73,8 +71,7 @@ async def update_task(task_id: UUID, task_payload: TaskUpdate, session: AsyncSes
 @router.delete("/tasks/{task_id}")
 async def delete_task(task_id: UUID, session: AsyncSession =Depends(get_async_session)):
     """удалить задачу"""
-    query = await session.execute(select(Task).where(Task.id == task_id))
-    task = query.scalars().first()
+    task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(404, "task not found")
     

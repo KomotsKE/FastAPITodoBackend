@@ -1,8 +1,3 @@
-from pathlib import Path
-import logging
-import logging.config
-
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,8 +9,6 @@ class Config(BaseSettings):
     PG_USER: str
     PG_PASSWORD: str
     PG_DB: str
-    PG_ADMIN_EMAIL: str
-    PG_ADMIN_PASSWORD: str
 
     @property
     def DATABASE_URL_ASYNCPG(self) -> str:
