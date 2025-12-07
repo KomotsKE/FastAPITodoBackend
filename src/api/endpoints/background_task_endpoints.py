@@ -12,6 +12,7 @@ SLEEP_TIME = 60  # seconds
 
 
 async def fetch_data() -> list[dict]:
+    """Получение данных из внешнего API для генерации задач."""
     async with httpx.AsyncClient() as client:
         response = await client.get("https://jsonplaceholder.typicode.com/todos")
         response.raise_for_status()

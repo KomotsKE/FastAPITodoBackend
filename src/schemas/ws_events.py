@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel
-from .task import TaskOut
+from src.schemas.task import TaskOut
 
 
 class TaskEventType(str, Enum):

@@ -15,13 +15,14 @@ router = APIRouter()
 
 @router.get("/tasks", response_model=list[TaskOut])
 async def get_tasks(session: AsyncSession =Depends(get_async_session)):
+    """Получить все задачи"""
     tasks = await session.execute(select(Task))
     return tasks.scalars().all()
 
 
 @router.get("/tasks/{task_id}", response_model=TaskOut)
 async def get_task(task_id: UUID, session: AsyncSession =Depends(get_async_session)):
-    """получить задачу"""
+    """Получить одну задачу"""
     task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(404, "task not found")
@@ -30,7 +31,7 @@ async def get_task(task_id: UUID, session: AsyncSession =Depends(get_async_sessi
 
 @router.post("/tasks", response_model=TaskOut)
 async def create_task(task_payload: TaskCreate, session: AsyncSession =Depends(get_async_session)):
-    """создать задачу"""
+    """Создать задачу"""
     task = Task(
         title=task_payload.title,
         description=task_payload.description,
@@ -53,7 +54,7 @@ async def create_task(task_payload: TaskCreate, session: AsyncSession =Depends(g
 
 @router.patch("/tasks/{task_id}", response_model=TaskOut)
 async def update_task(task_id: UUID, task_payload: TaskUpdate, session: AsyncSession =Depends(get_async_session)):
-    """обновление задачи"""
+    """Обновление задачи"""
     task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(404, "task not found")
@@ -89,7 +90,7 @@ async def update_task(task_id: UUID, task_payload: TaskUpdate, session: AsyncSes
 
 @router.delete("/tasks/{task_id}")
 async def delete_task(task_id: UUID, session: AsyncSession =Depends(get_async_session)):
-    """удалить задачу"""
+    """Удалить задачу"""
     task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(404, "task not found")
@@ -109,10 +110,3 @@ async def delete_task(task_id: UUID, session: AsyncSession =Depends(get_async_se
     await manager.broadcast(event)
     
     return {"status": "ok"}
-
-
-@router.post("/task-generator/run")
-async def run_task_generator():
-    """принудительный запуск фоновой задачи"""
-    pass
-

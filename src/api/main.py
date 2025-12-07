@@ -6,6 +6,7 @@ from src.api.endpoints import tasks_endpoints, ws_endpoints, background_task_end
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Запуск периодической фоновой задачи при старте приложения."""
     task = asyncio.create_task(background_task_endpoints.periodic_task())
     try:
         yield
