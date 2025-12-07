@@ -1,10 +1,14 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
-from database.session import get_async_session
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models.task import Task
-from schemas.task import TaskCreate, TaskOut, TaskUpdate
+from src.database.session import get_async_session
+from src.database.models.task import Task
+from src.schemas.task import TaskCreate, TaskOut, TaskUpdate
+from src.schemas.ws_events import TaskEvent, TaskEventType
+from src.websocket.connection_manager import manager
+
 
 router = APIRouter()
 
@@ -15,7 +19,6 @@ async def get_tasks(session: AsyncSession =Depends(get_async_session)):
     return tasks.scalars().all()
 
 
-
 @router.get("/tasks/{task_id}", response_model=TaskOut)
 async def get_task(task_id: UUID, session: AsyncSession =Depends(get_async_session)):
     """получить задачу"""
@@ -23,6 +26,7 @@ async def get_task(task_id: UUID, session: AsyncSession =Depends(get_async_sessi
     if not task:
         raise HTTPException(404, "task not found")
     return task
+
 
 @router.post("/tasks", response_model=TaskOut)
 async def create_task(task_payload: TaskCreate, session: AsyncSession =Depends(get_async_session)):
@@ -37,7 +41,15 @@ async def create_task(task_payload: TaskCreate, session: AsyncSession =Depends(g
     await session.commit()
     await session.refresh(task)
 
+    event = TaskEvent(
+        event_type=TaskEventType.TASK_CREATED,
+        task=TaskOut.model_validate(task),
+        timestamp=datetime.now(timezone.utc)
+    )
+    await manager.broadcast(event)
+
     return task
+
 
 @router.patch("/tasks/{task_id}", response_model=TaskOut)
 async def update_task(task_id: UUID, task_payload: TaskUpdate, session: AsyncSession =Depends(get_async_session)):
@@ -61,9 +73,16 @@ async def update_task(task_id: UUID, task_payload: TaskUpdate, session: AsyncSes
         changed = True
     
     if changed:
-        session.add(task)
         await session.commit()
         await session.refresh(task)
+
+        # Отправить WebSocket-событие
+        event = TaskEvent(
+            event_type=TaskEventType.TASK_UPDATED,
+            task=TaskOut.model_validate(task),
+            timestamp=datetime.now(timezone.utc)
+        )
+        await manager.broadcast(event)
 
     return task
 
@@ -75,11 +94,21 @@ async def delete_task(task_id: UUID, session: AsyncSession =Depends(get_async_se
     if not task:
         raise HTTPException(404, "task not found")
     
+    # Сохранить данные задачи для уведомления (после удаления их не будет)
+    task_out = TaskOut.model_validate(task)
+    
     await session.delete(task)
     await session.commit()
+
+    # Отправить WebSocket-событие
+    event = TaskEvent(
+        event_type=TaskEventType.TASK_DELETED,
+        task=task_out,
+        timestamp=datetime.now(timezone.utc)
+    )
+    await manager.broadcast(event)
     
     return {"status": "ok"}
-
 
 
 @router.post("/task-generator/run")
