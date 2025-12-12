@@ -96,12 +96,11 @@ FastAPITodoBackend/
 ├── alembic.ini                     # Alembic конфигурация
 ├── requirements.txt                # Python зависимости
 ├── .env.example                    # Пример переменных окружения
-
 └── README.md                       # Этот файл
+>
 
 Swagger
 <img width="1919" height="668" alt="image" src="https://github.com/user-attachments/assets/cc95ec7a-5bb5-4a48-861b-e6d3419089d8" />
 
 Websocket
-<img width="1118" height="208" alt="image" src="https://github.com/user-attachments/assets/874477ad-c863-4336-831c-b4190f1bfaad" />
-
+<img width="1118" height="208" alt="image" src="https://github.com/user-attachments/assets/874477ad-c863-4336-831c-b4190f1bfaad" /
