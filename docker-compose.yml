@@ -1,0 +1,29 @@
+services:
+  pg_db:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  web:
+    build: .
+    depends_on:
+      - pg_db
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app:cached
+    restart: unless-stopped
+
+volumes:
+  pg_data:
