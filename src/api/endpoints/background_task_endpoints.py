@@ -1,10 +1,14 @@
 import asyncio
+from datetime import datetime, timezone
 import random
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends
+from src.schemas.task import TaskOut
+from src.schemas.ws_events import TaskEvent, TaskEventType
 from src.database.session import get_async_session
 from src.database.models.task import Task
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.websocket.connection_manager import manager
 
 
 router = APIRouter()
@@ -32,7 +36,13 @@ async def generate_tasks(session: AsyncSession):
         session.add(task)
 
     await session.commit()
-
+    
+    event = TaskEvent(
+            event_type=TaskEventType.BACKGROUND_TASK_RUN,
+            task=TaskOut.model_validate(task),
+            timestamp=datetime.now(timezone.utc)
+        )
+    await manager.broadcast(event)
 
 @router.post("/task-generator/run")
 async def run_task_generator(
